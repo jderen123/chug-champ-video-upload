@@ -166,6 +166,7 @@ app.post('/submit-chug', async (req, res) => {
   try {
     const handleText = req.body['contact[handle_text]'];
     const entryLeaderboardType = req.body['contact[entry_leaderboard_type]'];
+    const beerStyle = req.body['contact[beer_style]'];
     const container = req.body['contact[container]'];
     const videoUrl = req.body['contact[video_url]'];
     const videoUploadUrl = req.body['contact[video_upload_url]'];
@@ -212,6 +213,7 @@ app.post('/submit-chug', async (req, res) => {
     const fields = [
       { key: 'handle_text', value: handleText },
       { key: 'entry_leaderboard_type', value: entryLeaderboardType },
+      { key: 'beer_style', value: beerStyle },
       { key: 'container', value: container },
       { key: 'video_url', value: finalVideoUrl },
       { key: 'time_s', value: timeS },

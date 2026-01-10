@@ -56,15 +56,15 @@ function getUnverifiedSubmission(getShopifyAccessToken, SHOPIFY_STORE_DOMAIN) {
         id: 'gid://shopify/Metaobject/123456789',
         handle: 'submission-1768042654009',
         fields: {
-          name: '@chugmaster',
-          category: 'Beer/Seltzer',
-          beverage: 'Bud Light',
+          handle_text: '@chugmaster',
+          entry_leaderboard_type: '21+',
+          beer_style: 'Lager',
+          container: 'Can',
           video_url: 'https://f005.backblazeb2.com/file/chugchampleaderboard/submissions/1768042654009-submissions_1767973489302-_scene_8_202505272233.mp4',
           time_s: '8.5',
           volume_oz: '12',
-          social_url: 'https://instagram.com/chugmaster',
-          location: 'Austin, TX, USA',
-          verified: 'false'
+          handle_url: 'https://instagram.com/chugmaster',
+          location: 'Austin, TX, USA'
         }
       };
 
