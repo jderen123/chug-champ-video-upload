@@ -48,7 +48,7 @@
  * GET /admin/unverified
  * Fetch one unverified submission
  */
-async function getUnverifiedSubmission(getShopifyAccessToken, SHOPIFY_STORE_DOMAIN) {
+function getUnverifiedSubmission(getShopifyAccessToken, SHOPIFY_STORE_DOMAIN) {
   return async (req, res) => {
     try {
       // TEMPORARY: Return dummy data for testing
@@ -146,7 +146,7 @@ async function getUnverifiedSubmission(getShopifyAccessToken, SHOPIFY_STORE_DOMA
  * PATCH /admin/submission/:id
  * Update submission fields (does not change verified status)
  */
-async function updateSubmission(getShopifyAccessToken, SHOPIFY_STORE_DOMAIN) {
+function updateSubmission(getShopifyAccessToken, SHOPIFY_STORE_DOMAIN) {
   return async (req, res) => {
     try {
       const { id } = req.params;
@@ -235,7 +235,7 @@ async function updateSubmission(getShopifyAccessToken, SHOPIFY_STORE_DOMAIN) {
  * POST /admin/verify/:id
  * Mark submission as verified (approved for public leaderboard)
  */
-async function verifySubmission(getShopifyAccessToken, SHOPIFY_STORE_DOMAIN) {
+function verifySubmission(getShopifyAccessToken, SHOPIFY_STORE_DOMAIN) {
   return async (req, res) => {
     try {
       const { id } = req.params;
