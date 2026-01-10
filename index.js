@@ -23,6 +23,7 @@ app.use(cors({
     'http://localhost:5173',
     'https://chugchamp.com',
     'https://cddgrs-yg.myshopify.com',
+    'https://chug-champ-video-dashboard.onrender.com',
     process.env.ALLOWED_ORIGIN
   ].filter(Boolean)
 }));
