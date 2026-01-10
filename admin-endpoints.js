@@ -60,7 +60,8 @@ function getUnverifiedSubmission(getShopifyAccessToken, SHOPIFY_STORE_DOMAIN) {
           category: 'Beer/Seltzer',
           beverage: 'Bud Light',
           video_url: 'https://f005.backblazeb2.com/file/chugchampleaderboard/submissions/1768042654009-submissions_1767973489302-_scene_8_202505272233.mp4',
-          time: '8.5',
+          time_s: '8.5',
+          volume_oz: '12',
           social_url: 'https://instagram.com/chugmaster',
           location: 'Austin, TX, USA',
           verified: 'false'

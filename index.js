@@ -164,25 +164,30 @@ app.delete('/delete/:key', async (req, res) => {
 
 app.post('/submit-chug', async (req, res) => {
   try {
-    const name = req.body['contact[name]'];
-    const category = req.body['contact[category]'];
-    const beverage = req.body['contact[beverage]'];
+    const handleText = req.body['contact[handle_text]'];
+    const entryLeaderboardType = req.body['contact[entry_leaderboard_type]'];
+    const container = req.body['contact[container]'];
     const videoUrl = req.body['contact[video_url]'];
     const videoUploadUrl = req.body['contact[video_upload_url]'];
-    const socialUrl = req.body['contact[social_url]'];
+    const handleUrl = req.body['contact[handle_url]'];
     const location = req.body['contact[location]'];
-    const time = req.body['contact[time]'];
+    const timeS = req.body['contact[time_s]'];
+    const volumeOz = req.body['contact[volume_oz]'];
 
-    if (!name || !category || !beverage) {
-      return res.status(400).json({ error: 'name, category, and beverage required' });
+    if (!handleText || !container || !entryLeaderboardType) {
+      return res.status(400).json({ error: 'handle_text, container, and entry_leaderboard_type required' });
     }
 
     if (!videoUrl && !videoUploadUrl) {
       return res.status(400).json({ error: 'Either video_url or video_upload_url required' });
     }
 
-    if (!time) {
-      return res.status(400).json({ error: 'time is required' });
+    if (!timeS) {
+      return res.status(400).json({ error: 'time_s is required' });
+    }
+
+    if (!volumeOz) {
+      return res.status(400).json({ error: 'volume_oz is required' });
     }
 
     const finalVideoUrl = videoUploadUrl || videoUrl;
@@ -205,16 +210,21 @@ app.post('/submit-chug', async (req, res) => {
     `;
 
     const fields = [
-      { key: 'name', value: name },
-      { key: 'category', value: category },
-      { key: 'beverage', value: beverage },
+      { key: 'handle_text', value: handleText },
+      { key: 'entry_leaderboard_type', value: entryLeaderboardType },
+      { key: 'container', value: container },
       { key: 'video_url', value: finalVideoUrl },
-      { key: 'time', value: time },
-      { key: 'verified', value: 'false' }
+      { key: 'time_s', value: timeS },
+      { key: 'volume_oz', value: volumeOz },
+      { key: 'time_to_rim_s', value: '0.25' },
+      { key: 'time_to_setdown_s', value: '0.25' },
+      { key: 'splash_pct', value: '0.0' },
+      { key: 'foam_pct', value: '0.0' },
+      { key: 'date_iso', value: new Date().toISOString() }
     ];
 
-    if (socialUrl) {
-      fields.push({ key: 'social_url', value: socialUrl });
+    if (handleUrl) {
+      fields.push({ key: 'handle_url', value: handleUrl });
     }
 
     if (location) {
@@ -223,7 +233,7 @@ app.post('/submit-chug', async (req, res) => {
 
     const variables = {
       metaobject: {
-        type: 'leaderboard_submission',
+        type: 'beer_leaderboard_entry',
         fields
       }
     };
