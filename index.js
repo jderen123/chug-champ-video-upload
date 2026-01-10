@@ -20,6 +20,7 @@ app.use(cors({
   origin: [
     'http://127.0.0.1:9292',
     'http://localhost:9292',
+    'http://localhost:5173',
     'https://chugchamp.com',
     'https://cddgrs-yg.myshopify.com',
     process.env.ALLOWED_ORIGIN
