@@ -51,32 +51,11 @@
 function getUnverifiedSubmission(getShopifyAccessToken, SHOPIFY_STORE_DOMAIN) {
   return async (req, res) => {
     try {
-      // TEMPORARY: Return dummy data for testing
-      const dummySubmission = {
-        id: 'gid://shopify/Metaobject/123456789',
-        handle: 'submission-1768042654009',
-        fields: {
-          handle_text: '@chugmaster',
-          entry_leaderboard_type: '21+',
-          beer_style: 'Lager',
-          container: 'Can',
-          video_url: 'https://f005.backblazeb2.com/file/chugchampleaderboard/submissions/1768042654009-submissions_1767973489302-_scene_8_202505272233.mp4',
-          time_s: '8.5',
-          volume_oz: '12',
-          handle_url: 'https://instagram.com/chugmaster',
-          location: 'Austin, TX, USA'
-        }
-      };
-
-      return res.json(dummySubmission);
-
-      // TODO: Uncomment below for production
-      /*
       const token = await getShopifyAccessToken();
 
       const query = `
         query GetUnverifiedSubmissions {
-          metaobjects(type: "leaderboard_submission", first: 1) {
+          metaobjects(type: "beer_leaderboard_entry", first: 100) {
             edges {
               node {
                 id
@@ -134,7 +113,6 @@ function getUnverifiedSubmission(getShopifyAccessToken, SHOPIFY_STORE_DOMAIN) {
         handle: node.handle,
         fields: fieldsObj
       });
-      */
 
     } catch (error) {
       console.error('Error fetching unverified submissions:', error);
