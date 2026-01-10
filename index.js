@@ -222,7 +222,8 @@ app.post('/submit-chug', async (req, res) => {
       { key: 'time_to_setdown_s', value: '0.25' },
       { key: 'splash_pct', value: '0.0' },
       { key: 'foam_pct', value: '0.0' },
-      { key: 'date_iso', value: new Date().toISOString() }
+      { key: 'date_iso', value: new Date().toISOString() },
+      { key: 'verified', value: 'false' }
     ];
 
     if (handleUrl) {
