@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: chug-upload-backend
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: B2_APPLICATION_KEY_ID
+        sync: false
+      - key: B2_APPLICATION_KEY
+        sync: false
+      - key: B2_BUCKET_NAME
+        value: chugchampleaderboard
+      - key: B2_BUCKET_ID
+        sync: false
+      - key: ALLOWED_ORIGIN
+        value: https://chugchamp.com
+      - key: PORT
+        value: 3000

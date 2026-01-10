@@ -1,0 +1,610 @@
+# Chug Champ Admin Verification Dashboard - Product Requirements Document
+
+## Overview
+
+A React-based admin dashboard for reviewing and verifying user-submitted chug videos before they appear on the public leaderboard. Admins can review submissions one at a time, edit details if needed, and approve or reject submissions.
+
+---
+
+## Purpose
+
+**Problem:** User-submitted videos need moderation before appearing publicly to ensure:
+- Content is appropriate
+- Information is accurate (no typos, correct categories)
+- Videos meet quality standards
+- No spam or abuse
+
+**Solution:** Single-submission review interface that loads unverified entries one at a time, allowing admins to quickly review, edit, and approve submissions.
+
+---
+
+## User Flow
+
+1. Admin opens dashboard
+2. Dashboard automatically fetches one unverified submission
+3. Admin reviews:
+   - Video playback
+   - Submission details (name, category, beverage, etc.)
+4. Admin can:
+   - **Edit fields** if corrections needed (typos, inappropriate content)
+   - **Verify** to approve for public leaderboard
+   - **Reject** to mark as denied (optional future feature)
+5. Upon action, next unverified submission loads automatically
+6. If no submissions remain, show "All caught up!" message
+
+---
+
+## Data Model
+
+### Metaobject Type: `leaderboard_submission`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | User's name or social media handle |
+| `category` | string | Yes | "Beer/Seltzer" or "Non-Alc" |
+| `beverage` | string | Yes | Name of beverage consumed |
+| `video_url` | string | Yes | Public URL of video (YouTube, TikTok, Instagram, Twitter, or uploaded) |
+| `social_url` | string | No | User's social media profile URL |
+| `location` | string | No | City, State, Country |
+| `verified` | boolean | Yes | `false` by default, `true` when approved |
+
+---
+
+## Backend API Endpoints
+
+### Base URL
+`http://localhost:3000` (Development)  
+`https://your-render-url.com` (Production)
+
+### 1. GET /admin/unverified
+Fetch one unverified submission
+
+**Request:**
+```http
+GET /admin/unverified
+```
+
+**Response (200 OK):**
+```json
+{
+  "id": "gid://shopify/Metaobject/123456789",
+  "handle": "submission-1234567890",
+  "fields": {
+    "name": "@chugmaster",
+    "category": "Beer/Seltzer",
+    "beverage": "Bud Light",
+    "video_url": "https://example.com/video.mp4",
+    "social_url": "https://instagram.com/chugmaster",
+    "location": "Austin, TX, USA",
+    "verified": "false"
+  }
+}
+```
+
+**Response (404 Not Found):**
+```json
+{
+  "message": "No unverified submissions found"
+}
+```
+
+**Response (400 Bad Request):**
+```json
+{
+  "error": "Failed to fetch submissions",
+  "details": [...]
+}
+```
+
+---
+
+### 2. PATCH /admin/submission/:id
+Update submission fields (does NOT change verified status)
+
+**Request:**
+```http
+PATCH /admin/submission/gid://shopify/Metaobject/123456789
+Content-Type: application/json
+
+{
+  "name": "@chugchamp",
+  "beverage": "Miller Lite",
+  "location": "Austin, Texas, USA"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "submission": {
+    "id": "gid://shopify/Metaobject/123456789",
+    "handle": "submission-1234567890",
+    "fields": {
+      "name": "@chugchamp",
+      "category": "Beer/Seltzer",
+      "beverage": "Miller Lite",
+      "video_url": "https://example.com/video.mp4",
+      "social_url": "https://instagram.com/chugmaster",
+      "location": "Austin, Texas, USA",
+      "verified": "false"
+    }
+  }
+}
+```
+
+**Response (400 Bad Request):**
+```json
+{
+  "error": "Submission ID required"
+}
+```
+
+```json
+{
+  "error": "Failed to update submission",
+  "details": [...]
+}
+```
+
+---
+
+### 3. POST /admin/verify/:id
+Mark submission as verified (approved for public leaderboard)
+
+**Request:**
+```http
+POST /admin/verify/gid://shopify/Metaobject/123456789
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "verified": true,
+  "submission": {
+    "id": "gid://shopify/Metaobject/123456789",
+    "handle": "submission-1234567890",
+    "fields": {
+      "name": "@chugchamp",
+      "category": "Beer/Seltzer",
+      "beverage": "Miller Lite",
+      "video_url": "https://example.com/video.mp4",
+      "social_url": "https://instagram.com/chugmaster",
+      "location": "Austin, Texas, USA",
+      "verified": "true"
+    }
+  }
+}
+```
+
+**Response (400 Bad Request):**
+```json
+{
+  "error": "Submission ID required"
+}
+```
+
+```json
+{
+  "error": "Failed to verify submission",
+  "details": [...]
+}
+```
+
+---
+
+## React Dashboard - UI/UX Specifications
+
+### Tech Stack
+- **Framework:** React 18+
+- **Styling:** TailwindCSS or CSS Modules
+- **HTTP Client:** fetch or axios
+- **Video Player:** HTML5 `<video>` tag or react-player
+
+### Component Structure
+
+```
+App
+├── Header
+│   └── Logo, Title, Admin Info
+├── SubmissionViewer (Main Component)
+│   ├── VideoPlayer
+│   │   └── Video with controls
+│   ├── SubmissionDetails
+│   │   ├── EditableField (name)
+│   │   ├── EditableField (category)
+│   │   ├── EditableField (beverage)
+│   │   ├── EditableField (social_url)
+│   │   ├── EditableField (location)
+│   │   └── ReadOnlyField (video_url)
+│   └── ActionButtons
+│       ├── Update Button (saves edits)
+│       └── Verify Button (approves submission)
+└── EmptyState
+    └── "All caught up!" message when no unverified submissions
+```
+
+---
+
+## Detailed Component Specifications
+
+### 1. Header Component
+- Display app title: "Chug Champ Admin Dashboard"
+- Optional: Show admin user info
+- Optional: Logout button
+
+---
+
+### 2. SubmissionViewer Component
+
+**State Management:**
+```javascript
+const [submission, setSubmission] = useState(null);
+const [loading, setLoading] = useState(true);
+const [editedFields, setEditedFields] = useState({});
+const [isUpdating, setIsUpdating] = useState(false);
+const [isVerifying, setIsVerifying] = useState(false);
+```
+
+**Functions:**
+- `fetchUnverifiedSubmission()` - Fetch next unverified submission
+- `handleFieldChange(field, value)` - Track field edits
+- `handleUpdate()` - Save field edits via PATCH
+- `handleVerify()` - Approve submission via POST
+- `loadNextSubmission()` - Auto-load next after action
+
+---
+
+### 3. VideoPlayer Component
+
+**Props:**
+- `videoUrl` (string) - URL of video to display
+
+**Features:**
+- HTML5 video player with controls
+- Autoplay off
+- Show video URL below player (read-only)
+- Fallback for unsupported formats
+- For external platforms (YouTube, TikTok, Instagram), use iframe embed or react-player
+
+**Example:**
+```jsx
+<div className="video-container">
+  <video controls width="100%" src={videoUrl}>
+    Your browser does not support video playback.
+  </video>
+  <p className="video-url">Video URL: {videoUrl}</p>
+</div>
+```
+
+---
+
+### 4. SubmissionDetails Component
+
+**Props:**
+- `fields` (object) - Submission field data
+- `editedFields` (object) - Tracked edits
+- `onFieldChange` (function) - Field change handler
+
+**Fields:**
+
+| Field | Type | Editable | Validation |
+|-------|------|----------|------------|
+| Name | text input | Yes | Required, max 100 chars |
+| Category | dropdown | Yes | "Beer/Seltzer" or "Non-Alc" |
+| Beverage | text input | Yes | Required, max 100 chars |
+| Social URL | text input | Yes | Optional, valid URL format |
+| Location | text input | Yes | Optional, max 100 chars |
+| Video URL | text display | No | Read-only |
+
+**UI Layout:**
+```
+┌─────────────────────────────────┐
+│ Name:     [__________________]  │
+│ Category: [▼ Beer/Seltzer    ]  │
+│ Beverage: [__________________]  │
+│ Social:   [__________________]  │
+│ Location: [__________________]  │
+│ Video:    https://...           │
+└─────────────────────────────────┘
+```
+
+---
+
+### 5. ActionButtons Component
+
+**Props:**
+- `onUpdate` (function) - Update handler
+- `onVerify` (function) - Verify handler
+- `isUpdating` (boolean) - Update loading state
+- `isVerifying` (boolean) - Verify loading state
+- `hasEdits` (boolean) - Whether fields were edited
+
+**Buttons:**
+
+#### Update Button
+- **Label:** "Update" or "Save Changes"
+- **Disabled:** When `isUpdating` or no edits made
+- **Loading State:** Show spinner when `isUpdating`
+- **Style:** Secondary button (blue/gray)
+
+#### Verify Button
+- **Label:** "Verify & Approve"
+- **Disabled:** When `isVerifying`
+- **Loading State:** Show spinner when `isVerifying`
+- **Style:** Primary button (green)
+- **Behavior:** If edits exist, prompt "Save changes before verifying?"
+
+**UI Layout:**
+```
+┌────────────────────────────────────────┐
+│  [Update Changes]  [Verify & Approve]  │
+└────────────────────────────────────────┘
+```
+
+---
+
+### 6. EmptyState Component
+
+**Display When:**
+- No unverified submissions returned (404 response)
+
+**UI:**
+```
+┌─────────────────────────────┐
+│      ✓                      │
+│   All Caught Up!            │
+│                             │
+│   No unverified submissions │
+│   at this time.             │
+│                             │
+│   [Refresh]                 │
+└─────────────────────────────┘
+```
+
+---
+
+## User Interactions
+
+### Scenario 1: Admin Reviews and Verifies Submission
+1. Dashboard loads
+2. Fetch first unverified submission
+3. Display video and details
+4. Admin watches video
+5. Admin clicks "Verify & Approve"
+6. POST to `/admin/verify/:id`
+7. Success: Load next unverified submission
+8. Repeat until all caught up
+
+### Scenario 2: Admin Edits Before Verifying
+1. Dashboard shows unverified submission
+2. Admin notices typo in "Beverage" field
+3. Admin edits field: "Bud Lite" → "Bud Light"
+4. Admin clicks "Update Changes"
+5. PATCH to `/admin/submission/:id` with edited fields
+6. Success: Show "Updated!" toast
+7. Admin clicks "Verify & Approve"
+8. POST to `/admin/verify/:id`
+9. Success: Load next submission
+
+### Scenario 3: All Caught Up
+1. Dashboard loads
+2. GET `/admin/unverified` returns 404
+3. Display EmptyState component
+4. Admin can click "Refresh" to check again
+
+---
+
+## Error Handling
+
+### Network Errors
+- Display error toast: "Failed to load submission. Please try again."
+- Show "Retry" button
+
+### Update Errors
+- Display error toast: "Failed to update submission. Please check your changes."
+- Keep current submission loaded
+- Allow retry
+
+### Verify Errors
+- Display error toast: "Failed to verify submission. Please try again."
+- Keep current submission loaded
+- Allow retry
+
+### Authentication Errors (401/403)
+- Display: "Session expired. Please log in again."
+- Redirect to login page (future feature)
+
+---
+
+## Loading States
+
+### Initial Load
+- Show full-page spinner or skeleton
+
+### Action Loading
+- Disable buttons
+- Show inline spinner in button
+- Prevent double-clicks
+
+---
+
+## Success Feedback
+
+### After Update
+- Show toast: "Changes saved successfully!"
+- Toast auto-dismisses after 3 seconds
+
+### After Verify
+- Show toast: "Submission verified!"
+- Toast auto-dismisses after 2 seconds
+- Immediately load next submission
+
+---
+
+## Keyboard Shortcuts (Optional Enhancement)
+
+| Key | Action |
+|-----|--------|
+| `U` | Update changes |
+| `V` | Verify submission |
+| `R` | Refresh/Reload |
+| `→` | Next submission (skip - future) |
+
+---
+
+## Responsive Design
+
+### Desktop (1024px+)
+- Two-column layout: Video left, Details right
+- Full-size video player
+- Side-by-side action buttons
+
+### Tablet (768px - 1023px)
+- Single column: Video top, Details bottom
+- Slightly smaller video player
+- Stacked action buttons
+
+### Mobile (< 768px)
+- Single column layout
+- Video takes full width
+- Stacked fields and buttons
+- Smaller fonts and spacing
+
+---
+
+## Authentication & Security (Future Consideration)
+
+- Add login page with admin credentials
+- Implement JWT or session-based auth
+- Protect `/admin/*` routes with middleware
+- Add role-based access control (RBAC)
+
+---
+
+## Future Enhancements
+
+### Phase 2
+- **Reject Button:** Mark submission as rejected instead of deleting
+- **Skip Button:** Move to next submission without action
+- **Queue Counter:** Show "5 unverified submissions remaining"
+- **Search/Filter:** Find specific submissions by name/category
+
+### Phase 3
+- **Batch Actions:** Approve multiple at once
+- **Comment System:** Add admin notes to submissions
+- **Audit Log:** Track who verified what and when
+- **Analytics Dashboard:** Submissions per day, approval rate, etc.
+
+---
+
+## Development Checklist
+
+### Backend (Already Complete)
+- [x] GET `/admin/unverified` endpoint
+- [x] PATCH `/admin/submission/:id` endpoint
+- [x] POST `/admin/verify/:id` endpoint
+- [x] CORS configuration for admin domain
+- [x] Error handling and validation
+
+### Frontend (To Build)
+- [ ] Initialize React app
+- [ ] Set up routing (if needed)
+- [ ] Create component structure
+- [ ] Implement API service layer
+- [ ] Build VideoPlayer component
+- [ ] Build SubmissionDetails component with editable fields
+- [ ] Build ActionButtons component
+- [ ] Build EmptyState component
+- [ ] Add loading states
+- [ ] Add error handling
+- [ ] Add success toasts
+- [ ] Style with TailwindCSS/CSS
+- [ ] Test all user flows
+- [ ] Responsive design
+- [ ] Deploy to hosting (Vercel/Netlify)
+
+---
+
+## API Configuration
+
+### Environment Variables (.env)
+```env
+REACT_APP_API_URL=http://localhost:3000
+```
+
+### Production
+```env
+REACT_APP_API_URL=https://your-render-backend.com
+```
+
+---
+
+## Sample API Service Layer
+
+```javascript
+// services/api.js
+const API_URL = process.env.REACT_APP_API_URL;
+
+export async function fetchUnverifiedSubmission() {
+  const response = await fetch(`${API_URL}/admin/unverified`);
+  if (response.status === 404) {
+    return null; // No unverified submissions
+  }
+  if (!response.ok) {
+    throw new Error('Failed to fetch submission');
+  }
+  return response.json();
+}
+
+export async function updateSubmission(id, fields) {
+  const response = await fetch(`${API_URL}/admin/submission/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(fields)
+  });
+  if (!response.ok) {
+    throw new Error('Failed to update submission');
+  }
+  return response.json();
+}
+
+export async function verifySubmission(id) {
+  const response = await fetch(`${API_URL}/admin/verify/${encodeURIComponent(id)}`, {
+    method: 'POST'
+  });
+  if (!response.ok) {
+    throw new Error('Failed to verify submission');
+  }
+  return response.json();
+}
+```
+
+---
+
+## Deployment
+
+### Backend
+- Deploy to Render, Railway, or Heroku
+- Set environment variables
+- Update CORS to allow admin dashboard domain
+
+### Frontend
+- Deploy to Vercel, Netlify, or Cloudflare Pages
+- Set `REACT_APP_API_URL` to production backend URL
+- Configure build command: `npm run build`
+- Configure output directory: `build`
+
+---
+
+## Success Metrics
+
+- **Time per Review:** < 30 seconds average
+- **Verification Rate:** Track approved vs rejected
+- **Queue Length:** Monitor unverified submission backlog
+- **Admin Efficiency:** Submissions reviewed per hour
+
+---
+
+## End of PRD
