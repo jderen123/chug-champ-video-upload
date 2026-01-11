@@ -22,6 +22,7 @@ app.use(cors({
     'http://127.0.0.1:9292',
     'http://localhost:9292',
     'http://localhost:5173',
+    'http://localhost:8000',
     'https://chugchamp.com',
     'https://cddgrs-yg.myshopify.com',
     'https://chug-champ-video-dashboard.onrender.com',
