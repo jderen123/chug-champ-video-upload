@@ -24,6 +24,7 @@ app.use(cors({
     'https://chugchamp.com',
     'https://cddgrs-yg.myshopify.com',
     'https://chug-champ-video-dashboard.onrender.com',
+    'https://chugchamp-widgets.pages.dev',
     process.env.ALLOWED_ORIGIN
   ].filter(Boolean)
 }));
