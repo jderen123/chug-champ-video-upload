@@ -80,16 +80,20 @@ app.get('/health', (req, res) => {
 app.post('/get-upload-url', async (req, res) => {
   try {
     const { filename, contentType } = req.body;
-    
+
     if (!filename || !contentType) {
       return res.status(400).json({ error: 'filename and contentType required' });
     }
 
     const timestamp = Date.now();
     const key = `submissions/${timestamp}-${filename}`;
-    
-    const uploadUrl = `${req.protocol}://${req.get('host')}/upload/${encodeURIComponent(key)}`;
-    
+
+    // Use HTTPS for Render deployments, otherwise use request protocol
+    const protocol = req.get('host').includes('onrender.com') ? 'https' : req.protocol;
+    const uploadUrl = `${protocol}://${req.get('host')}/upload/${encodeURIComponent(key)}`;
+
+    console.log('Generated upload URL:', uploadUrl);
+
     await authorizeB2();
     const publicUrl = `${authData.downloadUrl}/file/${process.env.B2_BUCKET_NAME}/${key}`;
 
@@ -108,11 +112,20 @@ app.put('/upload/:key', async (req, res) => {
     const key = decodeURIComponent(req.params.key);
     const fileBuffer = req.body;
 
+    console.log('Upload request received:', {
+      key,
+      contentType: req.get('content-type'),
+      bufferSize: fileBuffer?.length || 0,
+      bufferType: typeof fileBuffer
+    });
+
     await authorizeB2();
+    console.log('B2 authorized successfully');
 
     const uploadUrlResponse = await b2.getUploadUrl({
       bucketId: process.env.B2_BUCKET_ID
     });
+    console.log('Upload URL obtained from B2');
 
     const uploadResponse = await b2.uploadFile({
       uploadUrl: uploadUrlResponse.data.uploadUrl,
@@ -121,16 +134,23 @@ app.put('/upload/:key', async (req, res) => {
       data: fileBuffer,
       contentType: req.get('content-type') || 'video/mp4'
     });
+    console.log('File uploaded to B2 successfully');
 
     const publicUrl = `${authData.downloadUrl}/file/${process.env.B2_BUCKET_NAME}/${key}`;
 
+    console.log('Upload complete, public URL:', publicUrl);
     res.json({
       success: true,
       publicUrl
     });
   } catch (error) {
     console.error('Error uploading file:', error);
-    res.status(500).json({ error: 'Failed to upload file' });
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      response: error.response?.data
+    });
+    res.status(500).json({ error: 'Failed to upload file', details: error.message });
   }
 });
 
