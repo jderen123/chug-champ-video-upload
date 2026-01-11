@@ -80,11 +80,24 @@ function getLeaderboardEntries(getShopifyAccessToken, shopifyStoreDomain) {
         };
       });
 
+      // Debug logging
+      console.log('Total entries fetched:', entries.length);
+      console.log('Looking for leaderboard_type:', leaderboard_type);
+      console.log('Sample entry:', entries[0]);
+
       // Filter by leaderboard_type and only include verified entries
-      const filteredEntries = entries.filter(entry =>
-        entry.leaderboard_type === leaderboard_type &&
-        entry.verified === 'true'
-      );
+      const filteredEntries = entries.filter(entry => {
+        const matches = entry.leaderboard_type === leaderboard_type &&
+          entry.verified === 'true';
+        if (!matches && entry.leaderboard_type === leaderboard_type) {
+          console.log('Entry filtered out:', {
+            leaderboard_type: entry.leaderboard_type,
+            verified: entry.verified,
+            verified_type: typeof entry.verified
+          });
+        }
+        return matches;
+      });
 
       // Sort by time_s (fastest times first)
       filteredEntries.sort((a, b) => {
