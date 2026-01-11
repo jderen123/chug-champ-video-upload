@@ -7,7 +7,7 @@ const {
   updateSubmission,
   verifySubmission
 } = require('./admin-endpoints');
-const { getLeaderboardEntries } = require('./leaderboard');
+const { getLeaderboardEntries } = require('./whitelabel');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
