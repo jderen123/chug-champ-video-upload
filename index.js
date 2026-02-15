@@ -7,7 +7,7 @@ const {
   updateSubmission,
   verifySubmission
 } = require('./admin-endpoints');
-const { getLeaderboardEntries } = require('./whitelabel');
+const { getLeaderboardEntries, getLeaderboardEntriesByName } = require('./whitelabel');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -294,6 +294,7 @@ app.post('/submit-chug', async (req, res) => {
   }
 });
 
+app.get('/whitelabel/name/:leaderboard_name', getLeaderboardEntriesByName(getShopifyAccessToken, process.env.SHOPIFY_STORE_DOMAIN));
 app.get('/whitelabel/:leaderboard_type', getLeaderboardEntries(getShopifyAccessToken, process.env.SHOPIFY_STORE_DOMAIN));
 app.get('/admin/unverified', getUnverifiedSubmission(getShopifyAccessToken, process.env.SHOPIFY_STORE_DOMAIN));
 app.patch('/admin/submission/:id', updateSubmission(getShopifyAccessToken, process.env.SHOPIFY_STORE_DOMAIN));
