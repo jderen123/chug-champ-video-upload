@@ -95,7 +95,7 @@ app.post('/get-upload-url', async (req, res) => {
     console.log('Generated upload URL:', uploadUrl);
 
     await authorizeB2();
-    const publicUrl = `${authData.downloadUrl}/file/${process.env.B2_BUCKET_NAME}/${key}`;
+    const publicUrl = `${authData.data.downloadUrl}/file/${process.env.B2_BUCKET_NAME}/${key}`;
 
     res.json({
       uploadUrl,
@@ -136,7 +136,7 @@ app.put('/upload/:key', async (req, res) => {
     });
     console.log('File uploaded to B2 successfully');
 
-    const publicUrl = `${authData.downloadUrl}/file/${process.env.B2_BUCKET_NAME}/${key}`;
+    const publicUrl = `${authData.data.downloadUrl}/file/${process.env.B2_BUCKET_NAME}/${key}`;
 
     console.log('Upload complete, public URL:', publicUrl);
     res.json({
