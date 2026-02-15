@@ -191,6 +191,7 @@ app.post('/submit-chug', async (req, res) => {
   try {
     const handleText = req.body['contact[handle_text]'];
     const leaderboardType = req.body['contact[leaderboard_type]'];
+    const leaderboardName = req.body['contact[leaderboard_name]'];
     const beerStyle = req.body['contact[beer_style]'];
     const container = req.body['contact[container]'];
     const videoUrl = req.body['contact[video_url]'];
@@ -200,8 +201,8 @@ app.post('/submit-chug', async (req, res) => {
     const timeS = req.body['contact[time_s]'];
     const volumeOz = req.body['contact[volume_oz]'];
 
-    if (!handleText || !container || !leaderboardType) {
-      return res.status(400).json({ error: 'handle_text, container, and leaderboard_type required' });
+    if (!handleText || !container) {
+      return res.status(400).json({ error: 'handle_text and container required' });
     }
 
     if (!videoUrl && !videoUploadUrl) {
@@ -237,7 +238,8 @@ app.post('/submit-chug', async (req, res) => {
 
     const fields = [
       { key: 'handle_text', value: handleText },
-      { key: 'leaderboard_type', value: leaderboardType },
+      { key: 'leaderboard_type', value: leaderboardType || '' },
+      { key: 'leaderboard_name', value: leaderboardName || '' },
       { key: 'beer_style', value: beerStyle },
       { key: 'container', value: container },
       { key: 'video_url', value: finalVideoUrl },
