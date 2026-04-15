@@ -37,11 +37,24 @@ let authData = null;
 let shopifyAccessToken = null;
 let tokenExpiresAt = null;
 
-async function authorizeB2() {
-  if (!authData) {
+async function authorizeB2(force = false) {
+  if (!authData || force) {
     authData = await b2.authorize();
   }
   return authData;
+}
+
+async function withB2Retry(fn) {
+  try {
+    return await fn();
+  } catch (error) {
+    const code = error.response?.data?.code;
+    if (error.response?.status === 401 || code === 'expired_auth_token' || code === 'bad_auth_token') {
+      await authorizeB2(true);
+      return await fn();
+    }
+    throw error;
+  }
 }
 
 async function getShopifyAccessToken() {
@@ -122,18 +135,18 @@ app.put('/upload/:key', async (req, res) => {
     await authorizeB2();
     console.log('B2 authorized successfully');
 
-    const uploadUrlResponse = await b2.getUploadUrl({
+    const uploadUrlResponse = await withB2Retry(() => b2.getUploadUrl({
       bucketId: process.env.B2_BUCKET_ID
-    });
+    }));
     console.log('Upload URL obtained from B2');
 
-    const uploadResponse = await b2.uploadFile({
+    const uploadResponse = await withB2Retry(() => b2.uploadFile({
       uploadUrl: uploadUrlResponse.data.uploadUrl,
       uploadAuthToken: uploadUrlResponse.data.authorizationToken,
       fileName: key,
       data: fileBuffer,
       contentType: req.get('content-type') || 'video/mp4'
-    });
+    }));
     console.log('File uploaded to B2 successfully');
 
     const publicUrl = `${authData.data.downloadUrl}/file/${process.env.B2_BUCKET_NAME}/${key}`;
@@ -160,11 +173,11 @@ app.delete('/delete/:key', async (req, res) => {
 
     await authorizeB2();
 
-    const fileListResponse = await b2.listFileNames({
+    const fileListResponse = await withB2Retry(() => b2.listFileNames({
       bucketId: process.env.B2_BUCKET_ID,
       startFileName: key,
       maxFileCount: 1
-    });
+    }));
 
     const file = fileListResponse.data.files.find(f => f.fileName === key);
 
@@ -172,10 +185,10 @@ app.delete('/delete/:key', async (req, res) => {
       return res.status(404).json({ error: 'File not found' });
     }
 
-    await b2.deleteFileVersion({
+    await withB2Retry(() => b2.deleteFileVersion({
       fileId: file.fileId,
       fileName: file.fileName
-    });
+    }));
 
     res.json({
       success: true,
